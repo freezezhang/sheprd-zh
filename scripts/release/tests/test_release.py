@@ -313,6 +313,10 @@ class ReleaseTests(unittest.TestCase):
         arm, intel = self.macos_builds()
         self.run_script("package-macos.sh", "20260920.3", arm, intel, self.work, self.notices)
         app = self.work / "Sheprd.app"
+        translations = {
+            f"Contents/Resources/{p.relative_to(ROOT / 'assets/macos').as_posix()}": p
+            for p in (ROOT / "assets/macos").glob("*.lproj/**/*") if p.is_file()
+        }
         self.assertEqual({str(p.relative_to(app)) for p in app.rglob("*") if p.is_file()}, {
             "Contents/MacOS/sheprd", "Contents/MacOS/sheprd-acp", "Contents/MacOS/sheprd-remote-control",
             "Contents/MacOS/sheprd-automate", "Contents/MacOS/sheprd-nearby", "Contents/MacOS/herdr-core",
@@ -325,7 +329,9 @@ class ReleaseTests(unittest.TestCase):
             "Contents/Resources/THIRD-PARTY-NOTICES.txt",
             "Contents/Resources/SOUND-NOTICE.md",
             "Contents/Resources/HERDR-CORE-LICENSES.txt",
-        })
+        } | translations.keys())
+        for packaged, source in translations.items():
+            self.assertEqual((app / packaged).read_bytes(), source.read_bytes())
         self.assertEqual((app / "Contents/Resources/THIRD-PARTY-NOTICES.txt").read_bytes(), self.notices.read_bytes())
         self.assertFalse((app / "Contents/MacOS/Herdr").exists())
         self.assertFalse((app / "Contents/MacOS/sheprd").is_symlink())

@@ -7,6 +7,7 @@ on:
       - .github/workflows/build-zh-macos.yml
       - scripts/release/build-zh-macos.sh
       - scripts/release/zh-release-notes.md
+      - scripts/release/tests/test_release.py
   workflow_dispatch:
 
 permissions: {}
@@ -39,6 +40,7 @@ jobs:
           python3 scripts/check-i18n.py
           python3 scripts/check-zh-hans.py
           bash scripts/check-file-size.sh
+          python3 -m unittest discover -s scripts/release/tests -p test_release.py -k test_unsigned_assembly
       - uses: taiki-e/install-action@1919c4a95903d2c33e4a221102edca87309fc14b # v2.89.0
         with:
           tool: git-cliff@2.12.0
