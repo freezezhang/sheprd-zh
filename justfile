@@ -209,6 +209,10 @@ bundle profile="release" features="":
     for helper in acp automate remote-control nearby; do
         rm -f "$app/Contents/MacOS/herdr-$helper"
         cp "$app/Contents/MacOS/sheprd-$helper" "$app/Contents/MacOS/herdr-$helper"
+        # Intel linkers may leave auxiliary executables unsigned. Sign both
+        # entry points before the bundle seals its nested code resources.
+        codesign --force --sign - "$app/Contents/MacOS/sheprd-$helper"
+        codesign --force --sign - "$app/Contents/MacOS/herdr-$helper"
     done
     cp assets/macos/Info.plist "$app/Contents/Info.plist"
     for lproj in assets/macos/*.lproj; do
