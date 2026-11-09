@@ -88,9 +88,14 @@ jobs:
       - name: Install pinned Rust toolchain
         run: rustup show
       - uses: taiki-e/install-action@1919c4a95903d2c33e4a221102edca87309fc14b # v2.89.0
+        if: matrix.arch == 'arm64'
         with:
           tool: cargo-about@0.9.2
           fallback: none
+      # cargo-about 0.9.2 publishes no Intel macOS prebuilt binary.
+      - name: Build the pinned notice generator on Intel
+        if: matrix.arch == 'x64'
+        run: cargo install cargo-about --version 0.9.2 --locked --features cli
       - name: Build and verify the native application bundle
         env:
           VERSION: ${{ needs.metadata.outputs.version }}
