@@ -5,3 +5,4 @@ mod leak;
 mod locale;
 mod macros;
 mod messages;
+mod zh_hans;

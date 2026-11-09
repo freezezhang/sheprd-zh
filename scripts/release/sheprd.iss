@@ -94,6 +94,7 @@ ShowLanguageDialog=auto
 ; language Setup ran in.
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl,installer\en-US.isl"
+Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl,installer\zh-Hans.isl"
 
 [Tasks]
 Name: "addtopath"; Description: "{cm:AddToPath}"

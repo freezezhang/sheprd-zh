@@ -1,3 +1,5 @@
+[简体中文说明](README.zh-CN.md) · [English](README.md)
+
 <p align="center">
   <img src="assets/icons/sheprd-icon-badge.png" alt="Sheprd app icon with a notification badge" width="176" height="176">
 </p>

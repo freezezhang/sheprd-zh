@@ -4,7 +4,7 @@ use sheprd_i18n::{Language, Pseudo};
 
 #[test]
 fn without_the_app_status_resolves_the_setting_as_it_would() {
-    // No language but English has messages yet, so a tag falls back.
+    // French has no messages, so its regional tag still falls back to English.
     let french = local(&Language::Locale("fr-CA".parse().unwrap()));
     assert_eq!(
         (french.configured.as_str(), french.locale.as_str()),
