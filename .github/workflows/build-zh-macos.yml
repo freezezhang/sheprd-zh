@@ -1,0 +1,102 @@
+name: Build Chinese macOS packages
+
+on:
+  push:
+    branches: [zh-Hans]
+    paths:
+      - .github/workflows/build-zh-macos.yml
+      - scripts/release/build-zh-macos.sh
+      - scripts/release/zh-release-notes.md
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: build-zh-macos-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    if: github.repository == 'freezezhang/sheprd-zh'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: version
+        name: Derive the calendar version from existing tags
+        run: |
+          version=$(git tag --list | python3 scripts/release/next-version.py "$(date -u +%Y%m%d)")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Check Chinese catalogs
+        run: |
+          python3 scripts/check-i18n.py
+          python3 scripts/check-zh-hans.py
+          bash scripts/check-file-size.sh
+      - uses: taiki-e/install-action@1919c4a95903d2c33e4a221102edca87309fc14b # v2.89.0
+        with:
+          tool: git-cliff@2.12.0
+          fallback: none
+      - name: Generate release notes from commit history
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p dist
+          base=$(gh release view --json tagName --jq .tagName 2>/dev/null || echo 178a50c)
+          cp scripts/release/zh-release-notes.md dist/RELEASE_NOTES.md
+          printf '\nSource: `%s`\n\n' "$GITHUB_SHA" >> dist/RELEASE_NOTES.md
+          git-cliff --config cliff.toml --tag "v$VERSION" --strip header "$base..HEAD" >> dist/RELEASE_NOTES.md
+          echo "$VERSION" > dist/VERSION
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: zh-release-notes
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  build:
+    needs: metadata
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            arch: arm64
+          - runner: macos-26-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      CARGO_BUILD_JOBS: '3'
+      MACOSX_DEPLOYMENT_TARGET: '14.2'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust toolchain
+        run: rustup show
+      - uses: taiki-e/install-action@1919c4a95903d2c33e4a221102edca87309fc14b # v2.89.0
+        with:
+          tool: cargo-about@0.9.2
+          fallback: none
+      - name: Build and verify the native application bundle
+        env:
+          VERSION: ${{ needs.metadata.outputs.version }}
+        run: bash scripts/release/build-zh-macos.sh "$VERSION" dist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sheprd-zh-macos-${{ matrix.arch }}
+          path: dist/*.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

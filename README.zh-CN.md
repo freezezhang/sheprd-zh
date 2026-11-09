@@ -11,6 +11,8 @@
 
 ## macOS 构建
 
+现成的 Apple Silicon（arm64）和 Intel（x64）安装包见 [个人 fork 的 Releases](https://github.com/freezezhang/sheprd-zh/releases)。要求 macOS 14.2+，下载对应架构的 ZIP，解压后将 `Sheprd.app` 拖到“应用程序”。Release 附有 `SHA256SUMS` 可核验下载内容。软件包仅作 ad-hoc 签名，未进行 Apple Developer ID 签名或公证；首次打开如被拦截，可在确认来源后通过“系统设置 → 隐私与安全性 → 仍要打开”允许此次打开。
+
 依照 `rust-toolchain.toml` 安装 Rust 1.99.0，并安装 Xcode 命令行工具和 `just`，然后运行：
 
 ```sh
@@ -30,6 +32,12 @@ bash scripts/build-zh-macos.sh
 ```sh
 /Applications/Sheprd.app/Contents/MacOS/sheprd language set system
 ```
+
+## SSH 设备依赖
+
+添加 SSH 设备还需要独立的 **Herdr CLI**，包内的 `herdr-core` 不提供 `herdr machine add` 命令。已有 CLI 时无需重复安装；没有时请从 [Herdr 官方 CLI 安装脚本](https://herdr.dev/install.sh) 下载并检查脚本后运行。这只安装 CLI，不需要安装旧版 Herdr 图形应用。默认路径为 `~/.local/bin/herdr`，可运行 `~/.local/bin/herdr --version` 检查。远端主机也需要可用的 Herdr 环境。
+
+缺少 CLI 时，添加设备可能显示 `No such file or directory (os error 2)`。本分支不修改 Herdr 或 herdr-core 后台程序。
 
 ## 翻译维护
 
